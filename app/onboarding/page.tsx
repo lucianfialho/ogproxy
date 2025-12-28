@@ -2,13 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type Step = 'project' | 'template' | 'api-keys' | 'complete';
+import Stepper, { Step } from '@/components/ui/stepper';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>('project');
-  const [loading, setLoading] = useState(false);
 
   // Form state
   const [projectName, setProjectName] = useState('');
@@ -18,71 +15,20 @@ export default function OnboardingPage() {
   const [aiProvider, setAiProvider] = useState<'openai' | 'claude'>('openai');
   const [apiKey, setApiKey] = useState('');
 
-  const handleNext = async () => {
-    setLoading(true);
-
-    if (currentStep === 'project') {
-      if (!projectName) {
-        alert('Por favor, dê um nome ao seu projeto');
-        setLoading(false);
-        return;
-      }
-      setCurrentStep('template');
-    } else if (currentStep === 'template') {
-      setCurrentStep('api-keys');
-    } else if (currentStep === 'api-keys') {
-      // Save everything and redirect to dashboard
-      try {
-        // TODO: Create project API call
-        setCurrentStep('complete');
-      } catch (error) {
-        console.error('Error creating project:', error);
-        alert('Erro ao criar projeto. Tente novamente.');
-      }
-    }
-
-    setLoading(false);
-  };
-
-  const handleSkip = () => {
-    if (currentStep === 'api-keys') {
-      setCurrentStep('complete');
-    }
-  };
-
   const handleComplete = () => {
+    // TODO: Save project to database
     router.push('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        {/* Progress bar */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1">
-              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 transition-all duration-300"
-                  style={{
-                    width: currentStep === 'project' ? '33%' :
-                           currentStep === 'template' ? '66%' :
-                           currentStep === 'api-keys' ? '100%' : '100%'
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-gray-400">
-            {currentStep === 'project' && 'Passo 1 de 3: Criar seu primeiro projeto'}
-            {currentStep === 'template' && 'Passo 2 de 3: Escolher template'}
-            {currentStep === 'api-keys' && 'Passo 3 de 3: Configurar IA'}
-            {currentStep === 'complete' && 'Configuração completa!'}
-          </p>
-        </div>
-
-        {/* Step: Project */}
-        {currentStep === 'project' && (
+    <div className="min-h-screen bg-[#0a0a0a] text-white py-12 px-4">
+      <Stepper
+        initialStep={1}
+        onFinalStepCompleted={handleComplete}
+        completeButtonText="Ir para Dashboard"
+      >
+        {/* Step 1: Criar Projeto */}
+        <Step>
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-bold mb-2">Crie seu primeiro projeto</h1>
@@ -101,7 +47,7 @@ export default function OnboardingPage() {
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="ex: Blog Pessoal, E-commerce, etc"
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-blue-500 text-white"
                 />
               </div>
 
@@ -114,23 +60,15 @@ export default function OnboardingPage() {
                   onChange={(e) => setProjectDescription(e.target.value)}
                   placeholder="Descreva o propósito deste projeto..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-blue-500 text-white"
                 />
               </div>
             </div>
-
-            <button
-              onClick={handleNext}
-              disabled={loading || !projectName}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-            >
-              {loading ? 'Aguarde...' : 'Continuar'}
-            </button>
           </div>
-        )}
+        </Step>
 
-        {/* Step: Template */}
-        {currentStep === 'template' && (
+        {/* Step 2: Escolher Template */}
+        <Step>
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-bold mb-2">Escolha um template</h1>
@@ -198,27 +136,11 @@ export default function OnboardingPage() {
                 </div>
               </button>
             </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setCurrentStep('project')}
-                className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition-colors"
-              >
-                Voltar
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={loading}
-                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded-lg font-medium transition-colors"
-              >
-                {loading ? 'Aguarde...' : 'Continuar'}
-              </button>
-            </div>
           </div>
-        )}
+        </Step>
 
-        {/* Step: API Keys */}
-        {currentStep === 'api-keys' && (
+        {/* Step 3: Configurar IA */}
+        <Step>
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-bold mb-2">Configure a IA</h1>
@@ -260,7 +182,7 @@ export default function OnboardingPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {aiProvider === 'openai' ? 'OpenAI' : 'Claude'} API Key
+                  {aiProvider === 'openai' ? 'OpenAI' : 'Claude'} API Key (opcional)
                 </label>
                 <input
                   type="password"
@@ -274,33 +196,11 @@ export default function OnboardingPage() {
                 </p>
               </div>
             </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setCurrentStep('template')}
-                className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition-colors"
-              >
-                Voltar
-              </button>
-              <button
-                onClick={handleSkip}
-                className="flex-1 px-6 py-3 border border-gray-700 hover:bg-gray-800 rounded-lg font-medium transition-colors"
-              >
-                Pular
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={loading}
-                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded-lg font-medium transition-colors"
-              >
-                {loading ? 'Salvando...' : 'Finalizar'}
-              </button>
-            </div>
           </div>
-        )}
+        </Step>
 
-        {/* Step: Complete */}
-        {currentStep === 'complete' && (
+        {/* Step 4: Completo */}
+        <Step>
           <div className="text-center space-y-8">
             <div>
               <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -310,7 +210,7 @@ export default function OnboardingPage() {
               </div>
               <h1 className="text-4xl font-bold mb-2">Tudo pronto!</h1>
               <p className="text-gray-400">
-                Seu projeto <span className="text-white font-medium">{projectName}</span> foi criado com sucesso.
+                Seu projeto <span className="text-white font-medium">{projectName || 'sem nome'}</span> foi criado com sucesso.
               </p>
             </div>
 
@@ -331,16 +231,9 @@ export default function OnboardingPage() {
                 </li>
               </ul>
             </div>
-
-            <button
-              onClick={handleComplete}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-            >
-              Ir para Dashboard
-            </button>
           </div>
-        )}
-      </div>
+        </Step>
+      </Stepper>
     </div>
   );
 }
